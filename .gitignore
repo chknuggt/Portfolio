@@ -1,0 +1,10 @@
+.env
+backend/vendor/
+backend/node_modules/
+backend/storage/*.key
+backend/public/hot
+backend/public/build/
+frontend/node_modules/
+frontend/dist/
+*.png
+.playwright-mcp/
