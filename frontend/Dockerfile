@@ -9,6 +9,11 @@ RUN deluser --remove-home node \
 
 WORKDIR /app
 
+COPY --chown=app:app package.json package-lock.json* ./
+RUN npm install --legacy-peer-deps
+
+COPY --chown=app:app . .
+
 USER app
 
 EXPOSE 5173
