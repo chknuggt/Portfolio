@@ -10,7 +10,7 @@ RUN deluser --remove-home node \
 WORKDIR /app
 
 COPY --chown=app:app package.json package-lock.json* ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 COPY --chown=app:app . .
 
