@@ -6,5 +6,5 @@ backend/public/hot
 backend/public/build/
 frontend/node_modules/
 frontend/dist/
-*.png
+
 .playwright-mcp/
