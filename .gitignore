@@ -6,7 +6,5 @@ backend/public/hot
 backend/public/build/
 frontend/node_modules/
 frontend/dist/
-frontend/test-results/
-frontend/playwright-report/
 
 .playwright-mcp/
