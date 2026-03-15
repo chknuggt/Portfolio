@@ -1,8 +1,8 @@
 # Portfolio
 
-A 3D interactive portfolio site. Users scroll through a cinematic zoom into a desktop PC, which transitions seamlessly into the actual portfolio.
+Personal portfolio site built with Laravel 11, Vite, and Tailwind CSS.
 
-**Stack**: React, Three.js, Vite, Laravel 11, MariaDB, Redis, Nginx, Docker
+**Stack**: Laravel 11, Vite, Tailwind CSS, MariaDB, Redis, Nginx, Docker
 
 ## Quick Start
 
@@ -13,13 +13,14 @@ cp .env.example .env
 # 2. Build and start containers
 docker compose up -d --build
 
-# 3. Install frontend dependencies
-docker compose run --rm node npm install
-docker compose up -d node
-
-# 4. Generate app key and run migrations
+# 3. Install backend dependencies and setup
+docker compose exec php composer install
 docker compose exec php php artisan key:generate
 docker compose exec php php artisan migrate
+
+# 4. Install frontend assets and build
+docker compose exec php npm install
+docker compose exec php npm run build
 ```
 
 Open **http://localhost:8080**
@@ -28,21 +29,14 @@ Open **http://localhost:8080**
 
 ```
 Portfolio/
-├── frontend/          React + Vite + Three.js
+├── backend/           Laravel 11 + Vite + Tailwind
 │   ├── Dockerfile
-│   └── src/
-│       ├── App.jsx                  Root component, scroll & reveal logic
-│       └── components/
-│           ├── ComputersCanvas.jsx  3D scene, camera animation
-│           ├── CanvasLoader.jsx     Loading progress
-│           └── ScreenContent.jsx    Monitor screen content
-├── backend/           Laravel 11 API
-│   └── Dockerfile
+│   ├── resources/     Blade views, CSS, JS
+│   ├── routes/
+│   └── vite.config.js
 ├── docker/
 │   └── nginx/         Nginx reverse proxy config
-├── .env               Single config for Docker + Laravel
-├── plan.md            Implementation phases & status
-├── architecture.md    System design & diagrams
+├── .env               Config for Docker + Laravel
 └── docker-compose.yml
 ```
 
@@ -51,8 +45,7 @@ Portfolio/
 | Service | Port | Purpose |
 |---------|------|---------|
 | Nginx | 8080 | Reverse proxy |
-| Node/Vite | 5173 | React dev server |
-| PHP-FPM | 9000 | Laravel API |
+| PHP-FPM | 9000 | Laravel + Vite |
 | MariaDB | 3306 | Database |
 | Redis | 6379 | Cache & sessions |
 
@@ -62,7 +55,7 @@ Portfolio/
 docker compose down              # Stop containers
 docker compose logs -f           # View logs
 docker compose exec php bash     # Enter PHP container
-docker compose exec node sh      # Enter Node container
 docker compose exec php php artisan <cmd>  # Artisan commands
-docker compose exec node npm run build     # Production build
+docker compose exec php npm run dev        # Vite dev server
+docker compose exec php npm run build      # Production build
 ```

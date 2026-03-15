@@ -1,0 +1,115 @@
+export default function BioSection() {
+  return (
+    <div className="py-12 lg:py-20">
+      <div className="mx-auto max-w-4xl rounded-lg border border-[#1a1b2e] bg-[#0a0d1a] font-mono shadow-2xl">
+        {/* Terminal title bar */}
+        <div className="flex items-center gap-2 border-b border-[#1a1b2e] px-4 py-3">
+          <span className="h-3 w-3 rounded-full bg-[#f7768e]" />
+          <span className="h-3 w-3 rounded-full bg-[#e0af68]" />
+          <span className="h-3 w-3 rounded-full bg-[#9ece6a]" />
+          <span className="ml-4 text-xs text-[#565f89]">marios@arch:~/about</span>
+        </div>
+
+        {/* Terminal content */}
+        <div className="space-y-4 p-6 text-sm leading-relaxed">
+          {/* cat command */}
+          <div>
+            <p>
+              <span className="text-[#9ece6a]">marios@arch</span>
+              <span className="text-[#565f89]">:</span>
+              <span className="text-[#7aa2f7]">~/about</span>
+              <span className="text-[#565f89]">$</span>
+              <span className="text-[#c0caf5]"> cat summary.md</span>
+            </p>
+          </div>
+
+          <div className="border-l-2 border-[#7aa2f7] pl-4 text-[#a9b1d6]">
+            <p>
+              Highly motivated Software Engineer with hands-on experience in
+              full-stack development, API integrations, and cloud deployment.
+              Currently contributing to{" "}
+              <span className="text-[#7dcfff]">IANUS Technologies</span>,
+              handling end-to-end development from front-end UI with{" "}
+              <span className="text-[#9ece6a]">Next.js</span> and{" "}
+              <span className="text-[#9ece6a]">React</span> to back-end services
+              with <span className="text-[#9ece6a]">Django</span> and{" "}
+              <span className="text-[#9ece6a]">Supabase</span>, deployed on
+              Hetzner and Vercel infrastructure.
+            </p>
+          </div>
+
+          {/* Projects */}
+          <div>
+            <p>
+              <span className="text-[#9ece6a]">marios@arch</span>
+              <span className="text-[#565f89]">:</span>
+              <span className="text-[#7aa2f7]">~/about</span>
+              <span className="text-[#565f89]">$</span>
+              <span className="text-[#c0caf5]"> cat projects.log</span>
+            </p>
+          </div>
+
+          <div className="border-l-2 border-[#bb9af7] pl-4 text-[#a9b1d6]">
+            <p>
+              Delivered multiple personal projects including a commercial
+              e-commerce platform, cross-platform mobile apps, and a fully
+              automated <span className="text-[#ff9e64]">AI-powered</span>{" "}
+              trading pipeline. Advanced expertise in AI — working with MCP
+              servers, integrations, and AI-driven workflows to build real-world
+              automated systems.
+            </p>
+          </div>
+
+          {/* Interests */}
+          <div>
+            <p>
+              <span className="text-[#9ece6a]">marios@arch</span>
+              <span className="text-[#565f89]">:</span>
+              <span className="text-[#7aa2f7]">~/about</span>
+              <span className="text-[#565f89]">$</span>
+              <span className="text-[#c0caf5]"> grep -i "passion" interests.conf</span>
+            </p>
+          </div>
+
+          <div className="border-l-2 border-[#e0af68] pl-4 text-[#a9b1d6]">
+            <p>
+              Actively studying macroeconomics and global financial systems,
+              conducting fundamental research on currency markets, and developing
+              systematic forex trading strategies.
+            </p>
+          </div>
+
+          {/* Philosophy */}
+          <div>
+            <p>
+              <span className="text-[#9ece6a]">marios@arch</span>
+              <span className="text-[#565f89]">:</span>
+              <span className="text-[#7aa2f7]">~/about</span>
+              <span className="text-[#565f89]">$</span>
+              <span className="text-[#c0caf5]"> echo $PHILOSOPHY</span>
+            </p>
+          </div>
+
+          <div className="text-[#9ece6a]">
+            <p>
+              I genuinely enjoy learning new things and picking up new
+              technologies — whatever challenge or project I&apos;m put on,
+              I&apos;m eager to dive in and get up to speed quickly.
+            </p>
+          </div>
+
+          {/* Blinking cursor */}
+          <div>
+            <p>
+              <span className="text-[#9ece6a]">marios@arch</span>
+              <span className="text-[#565f89]">:</span>
+              <span className="text-[#7aa2f7]">~/about</span>
+              <span className="text-[#565f89]">$</span>
+              <span className="ml-1 inline-block h-4 w-2 animate-pulse bg-[#c0caf5]" />
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
