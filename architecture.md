@@ -75,12 +75,47 @@ Defined in `ComputersCanvas.jsx`:
 
 ## Backend Architecture
 
-Fresh Laravel 11 install. No custom endpoints yet.
+Laravel 11 CMS API serving portfolio content from MariaDB.
 
-Planned:
-- `POST /api/contact` - Contact form submission
-- MariaDB for persistent data
-- Redis for sessions and cache
+### Database Schema
+
+```
+settings                    contents
+┌────────────────┐          ┌────────────────────┐
+│ id (PK)        │          │ id (PK)            │
+│ key (unique)   │          │ type               │
+│ value          │          │ slug (unique)      │
+└────────────────┘          │ title              │
+                            │ excerpt (nullable) │
+                            │ icon (nullable)    │
+                            │ link (nullable)    │
+                            │ img (nullable)     │
+                            │ body (nullable)    │
+                            └────────────────────┘
+```
+
+### Content Types
+
+| Type | Count | Used By |
+|------|-------|---------|
+| page | 3 | Bear profile notes |
+| project | 6 | Bear, Launchpad, Finder |
+| terminal | 4 | Terminal app |
+| link | 5 | Safari favorites & frequent |
+
+### API Routes
+
+```
+GET /api/settings              → SettingController@index
+GET /api/content/{type}        → ContentController@index
+GET /api/content/slug/{slug}   → ContentController@show
+```
+
+### Request Flow
+
+```
+Browser → Nginx (/api/*) → Laravel router → Middleware → Controller → Model → MariaDB
+```
 
 ## Docker Services
 

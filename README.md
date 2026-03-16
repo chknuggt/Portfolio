@@ -1,8 +1,8 @@
 # Portfolio
 
-A 3D interactive portfolio site. Users scroll through a cinematic zoom into a desktop PC, which transitions seamlessly into the actual portfolio.
+A macOS-themed portfolio website with a 3D cinematic intro and a Laravel CMS backend. The site simulates the macOS desktop experience with draggable windows, dock, and interactive apps — all content is managed through a database.
 
-**Stack**: React, Three.js, Vite, Laravel 11, MariaDB, Redis, Nginx, Docker
+**Stack**: React, Three.js, Vite, TypeScript, UnoCSS, Zustand, Laravel 11, MariaDB, Redis, Nginx, Docker
 
 ## Quick Start
 
@@ -13,13 +13,9 @@ cp .env.example .env
 # 2. Build and start containers
 docker compose up -d --build
 
-# 3. Install frontend dependencies
-docker compose run --rm node npm install
-docker compose up -d node
-
-# 4. Generate app key and run migrations
+# 3. Generate app key and run migrations with seed
 docker compose exec php php artisan key:generate
-docker compose exec php php artisan migrate
+docker compose exec php php artisan migrate --seed
 ```
 
 Open **http://localhost:8080**
@@ -28,41 +24,83 @@ Open **http://localhost:8080**
 
 ```
 Portfolio/
-├── frontend/          React + Vite + Three.js
-│   ├── Dockerfile
-│   └── src/
-│       ├── App.jsx                  Root component, scroll & reveal logic
-│       └── components/
-│           ├── ComputersCanvas.jsx  3D scene, camera animation
-│           ├── CanvasLoader.jsx     Loading progress
-│           └── ScreenContent.jsx    Monitor screen content
-├── backend/           Laravel 11 API
-│   └── Dockerfile
+├── frontend/              React + Vite + Three.js + macOS UI
+│   ├── src/
+│   │   ├── App.jsx        Root component, 3D intro, scroll logic
+│   │   ├── components/    Apps (Bear, Safari, Terminal, Finder, etc.)
+│   │   ├── configs/       App configurations and content
+│   │   ├── stores/        Zustand state management
+│   │   └── types/         TypeScript type definitions
+│   └── public/
+│       ├── markdown/      Markdown content files
+│       ├── img/           Icons, wallpapers, site images
+│       └── music/         Audio files
+├── backend/               Laravel 11 CMS API
+│   ├── app/
+│   │   ├── Http/Controllers/Api/   API controllers
+│   │   └── Models/                 Eloquent models
+│   ├── database/
+│   │   ├── migrations/    Database schema
+│   │   └── seeders/       Initial content data
+│   └── routes/api.php     API route definitions
 ├── docker/
-│   └── nginx/         Nginx reverse proxy config
-├── .env               Single config for Docker + Laravel
-├── plan.md            Implementation phases & status
-├── architecture.md    System design & diagrams
-└── docker-compose.yml
+│   └── nginx/             Nginx reverse proxy config
+├── docker-compose.yml
+├── plan.md                Implementation phases & status
+└── architecture.md        System design & diagrams
 ```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/settings` | All settings (name, email, links, music, etc.) |
+| GET | `/api/content/{type}` | Content by type: `page`, `project`, `terminal`, `link` |
+| GET | `/api/content/slug/{slug}` | Single content item by slug |
+
+## Database
+
+Two tables:
+
+- **settings** — 17 key/value pairs (personal info, links, music, siri config)
+- **contents** — 18 entries across 4 types (pages, projects, terminal files, safari links)
 
 ## Services
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| Nginx | 8080 | Reverse proxy |
-| Node/Vite | 5173 | React dev server |
-| PHP-FPM | 9000 | Laravel API |
-| MariaDB | 3306 | Database |
-| Redis | 6379 | Cache & sessions |
+| Service | Internal Port | Exposed Port | Purpose |
+|---------|---------------|--------------|---------|
+| Nginx | 80 | 8080 | Reverse proxy |
+| Node/Vite | 5173 | — | React dev server |
+| PHP-FPM | 9000 | — | Laravel API |
+| MariaDB | 3306 | — | Database |
+| Redis | 6379 | — | Cache & sessions |
 
 ## Useful Commands
 
 ```bash
-docker compose down              # Stop containers
-docker compose logs -f           # View logs
-docker compose exec php bash     # Enter PHP container
-docker compose exec node sh      # Enter Node container
-docker compose exec php php artisan <cmd>  # Artisan commands
-docker compose exec node npm run build     # Production build
+# Container management
+docker compose up -d --build    # Start all services
+docker compose down             # Stop all services
+docker compose logs -f          # View logs
+
+# Laravel
+docker compose exec php php artisan migrate --seed   # Run migrations + seed
+docker compose exec php php artisan migrate:fresh --seed  # Reset DB + seed
+docker compose exec php php artisan tinker           # Interactive PHP shell
+
+# Database
+docker compose exec mariadb mariadb -u marioselef -p portfolio  # DB shell
+
+# Frontend
+docker compose exec node npm run build    # Production build
 ```
+
+## macOS Desktop Features
+
+- Draggable/resizable windows with traffic light buttons
+- Dock with magnification effects
+- Dark mode and Control Center
+- Spotlight search
+- Apps: Bear (notes), Safari, Terminal, Finder, FaceTime, Spotify, Siri, VSCode, Typora
+- Login/lock screen
+- Apple menu, WiFi menu, battery indicator
