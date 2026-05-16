@@ -1,21 +1,11 @@
-FROM node:20-alpine
-
-ARG UID=1000
-ARG GID=1000
-
-RUN deluser --remove-home node \
-    && addgroup -g ${GID} app \
-    && adduser -u ${UID} -G app -s /bin/sh -D app
-
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-COPY --chown=app:app package.json package-lock.json* ./
+COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
+COPY . .
+RUN npm run build
 
-COPY --chown=app:app . .
-
-USER app
-
-EXPOSE 5173
-
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+FROM nginx:1.27-alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

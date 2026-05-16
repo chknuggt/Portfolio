@@ -16,13 +16,8 @@ services:
   node:
     build:
       context: ./frontend
-      args:
-        UID: ${UID:-1000}
-        GID: ${GID:-1000}
     container_name: portfolio-node
     restart: unless-stopped
-    volumes:
-      - ./frontend:/app
     networks:
       - portfolio
     depends_on:
