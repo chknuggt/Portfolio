@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   api,
   type AboutSections,
+  type BearNote,
   type Education,
   type Experience,
   type MusicTrack,
@@ -14,6 +15,7 @@ import {
 interface PortfolioData {
   profile: Profile | null;
   projects: Project[];
+  bearNotes: BearNote[];
   socialLinks: SocialLink[];
   experience: Experience[];
   education: Education[];
@@ -26,6 +28,7 @@ interface PortfolioData {
 const defaultData: PortfolioData = {
   profile: null,
   projects: [],
+  bearNotes: [],
   socialLinks: [],
   experience: [],
   education: [],
@@ -44,16 +47,18 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     Promise.allSettled([
       api.profile(),
       api.projects(),
+      api.bearNotes(),
       api.socialLinks(),
       api.experience(),
       api.education(),
       api.skills(),
       api.music(),
       api.about(),
-    ]).then(([profile, projects, socialLinks, experience, education, skills, music, about]) => {
+    ]).then(([profile, projects, bearNotes, socialLinks, experience, education, skills, music, about]) => {
       setData({
         profile: profile.status === "fulfilled" ? profile.value : null,
         projects: projects.status === "fulfilled" ? projects.value : [],
+        bearNotes: bearNotes.status === "fulfilled" ? bearNotes.value : [],
         socialLinks: socialLinks.status === "fulfilled" ? socialLinks.value : [],
         experience: experience.status === "fulfilled" ? experience.value : [],
         education: education.status === "fulfilled" ? education.value : [],

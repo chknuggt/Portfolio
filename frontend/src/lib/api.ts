@@ -15,8 +15,18 @@ export interface Project {
   title: string;
   excerpt: string;
   icon: string;
-  link: string | null;
+  live_url: string | null;
+  github_url: string | null;
+  technologies: string | null;
   markdown_file: string | null;
+  sort_order: number;
+}
+
+export interface BearNote {
+  id: string;
+  title: string;
+  excerpt: string;
+  file: string;
   sort_order: number;
 }
 
@@ -72,6 +82,7 @@ async function get<T>(path: string): Promise<T> {
 export const api = {
   profile: () => get<Profile>("/profile"),
   projects: () => get<Project[]>("/projects"),
+  bearNotes: () => get<BearNote[]>("/bear-notes"),
   socialLinks: () => get<SocialLink[]>("/social-links"),
   experience: () => get<Experience[]>("/experience"),
   education: () => get<Education[]>("/education"),

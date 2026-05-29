@@ -16,6 +16,14 @@ type AboutSection struct {
 	Content string
 }
 
+type BearNote struct {
+	ID        pgtype.UUID
+	Title     string
+	Excerpt   string
+	File      string
+	SortOrder int32
+}
+
 type Education struct {
 	ID          pgtype.UUID
 	School      string
@@ -63,10 +71,12 @@ type Project struct {
 	Title        string
 	Excerpt      string
 	Icon         string
-	Link         *string
+	LiveUrl      *string
 	MarkdownFile *string
 	SortOrder    int32
 	CreatedAt    time.Time
+	GithubUrl    *string
+	Technologies *string
 }
 
 type Skill struct {
