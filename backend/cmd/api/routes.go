@@ -24,4 +24,5 @@ func addRoutes(r chi.Router, pool *pgxpool.Pool) {
 	r.Get("/music", handleListMusic(q))
 	r.Get("/about", handleListAbout(q))
 	r.Get("/bear-notes", handleListBearNotes(q))
+	r.Get("/desktop-items", handleListDesktopItems(q))
 }

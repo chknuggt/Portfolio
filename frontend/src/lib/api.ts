@@ -73,6 +73,16 @@ export interface MusicTrack {
 
 export type AboutSections = Record<string, string>;
 
+export interface DesktopItem {
+  id: string;
+  name: string;
+  type: "folder" | "file";
+  parent_id: string | null;
+  link: string | null;
+  icon: string | null;
+  sort_order: number;
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`/api${path}`);
   if (!res.ok) throw new Error(`GET /api${path} failed: ${res.status}`);
@@ -89,4 +99,5 @@ export const api = {
   skills: () => get<Skill[]>("/skills"),
   music: () => get<MusicTrack[]>("/music"),
   about: () => get<AboutSections>("/about"),
+  desktopItems: () => get<DesktopItem[]>("/desktop-items"),
 };

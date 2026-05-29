@@ -3,6 +3,7 @@ import {
   api,
   type AboutSections,
   type BearNote,
+  type DesktopItem,
   type Education,
   type Experience,
   type MusicTrack,
@@ -22,6 +23,7 @@ interface PortfolioData {
   skills: Skill[];
   music: MusicTrack[];
   about: AboutSections;
+  desktopItems: DesktopItem[];
   loaded: boolean;
 }
 
@@ -35,6 +37,7 @@ const defaultData: PortfolioData = {
   skills: [],
   music: [],
   about: {},
+  desktopItems: [],
   loaded: false,
 };
 
@@ -54,7 +57,8 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       api.skills(),
       api.music(),
       api.about(),
-    ]).then(([profile, projects, bearNotes, socialLinks, experience, education, skills, music, about]) => {
+      api.desktopItems(),
+    ]).then(([profile, projects, bearNotes, socialLinks, experience, education, skills, music, about, desktopItems]) => {
       setData({
         profile: profile.status === "fulfilled" ? profile.value : null,
         projects: projects.status === "fulfilled" ? projects.value : [],
@@ -65,6 +69,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         skills: skills.status === "fulfilled" ? skills.value : [],
         music: music.status === "fulfilled" ? music.value : [],
         about: about.status === "fulfilled" ? about.value : {},
+        desktopItems: desktopItems.status === "fulfilled" ? desktopItems.value : [],
         loaded: true,
       });
     });

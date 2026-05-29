@@ -24,6 +24,16 @@ type BearNote struct {
 	SortOrder int32
 }
 
+type DesktopItem struct {
+	ID        pgtype.UUID
+	Name      string
+	Type      string
+	ParentID  pgtype.UUID
+	Link      *string
+	Icon      *string
+	SortOrder int32
+}
+
 type Education struct {
 	ID          pgtype.UUID
 	School      string
