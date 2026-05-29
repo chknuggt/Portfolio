@@ -26,6 +26,12 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     allowedHosts: ["marioselef.com", "www.marioselef.com"],
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        rewrite: (path) => path.replace(/^\/api/, "")
+      }
+    },
     watch: {
       usePolling: true
     }

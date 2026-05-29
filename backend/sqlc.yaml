@@ -8,3 +8,14 @@ sql:
         package: "queries"
         out: "internal/db/queries"
         sql_package: "pgx/v5"
+        overrides:
+          - db_type: "text"
+            nullable: true
+            go_type:
+              type: "string"
+              pointer: true
+          - db_type: "timestamptz"
+            nullable: false
+            go_type:
+              import: "time"
+              type: "Time"

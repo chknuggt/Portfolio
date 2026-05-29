@@ -13,4 +13,14 @@ func addRoutes(r chi.Router, pool *pgxpool.Pool) {
 	r.Get("/", handleRoot())
 	r.Get("/health", handleHealth(pool))
 	r.Get("/users/count", handleCountUsers(q))
+
+	// nginx strips /api/ prefix before forwarding here
+	r.Get("/profile", handleGetProfile(q))
+	r.Get("/projects", handleListProjects(q))
+	r.Get("/social-links", handleListSocialLinks(q))
+	r.Get("/experience", handleListExperience(q))
+	r.Get("/education", handleListEducation(q))
+	r.Get("/skills", handleListSkills(q))
+	r.Get("/music", handleListMusic(q))
+	r.Get("/about", handleListAbout(q))
 }

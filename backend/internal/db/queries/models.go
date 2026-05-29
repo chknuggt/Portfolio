@@ -5,13 +5,90 @@
 package queries
 
 import (
+	"time"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type AboutSection struct {
+	ID      pgtype.UUID
+	Key     string
+	Content string
+}
+
+type Education struct {
+	ID          pgtype.UUID
+	School      string
+	Degree      string
+	PeriodStart pgtype.Date
+	PeriodEnd   pgtype.Date
+	SortOrder   int32
+}
+
+type Experience struct {
+	ID          pgtype.UUID
+	Company     string
+	Role        string
+	PeriodStart pgtype.Date
+	PeriodEnd   pgtype.Date
+	Description string
+	SortOrder   int32
+}
+
+type Music struct {
+	ID        pgtype.UUID
+	Title     string
+	Artist    string
+	Cover     string
+	Audio     string
+	SortOrder int32
+}
+
+type Profile struct {
+	ID        pgtype.UUID
+	Name      string
+	Title     string
+	Bio       string
+	Avatar    string
+	Email     string
+	Phone     *string
+	Location  *string
+	Github    *string
+	Linkedin  *string
+	UpdatedAt time.Time
+}
+
+type Project struct {
+	ID           pgtype.UUID
+	Title        string
+	Excerpt      string
+	Icon         string
+	Link         *string
+	MarkdownFile *string
+	SortOrder    int32
+	CreatedAt    time.Time
+}
+
+type Skill struct {
+	ID        pgtype.UUID
+	Name      string
+	Category  string
+	SortOrder int32
+}
+
+type SocialLink struct {
+	ID        pgtype.UUID
+	Title     string
+	Img       string
+	Link      string
+	Category  string
+	SortOrder int32
+}
 
 type User struct {
 	ID           pgtype.UUID
 	Email        string
 	PasswordHash string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
