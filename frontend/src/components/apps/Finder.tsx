@@ -1,67 +1,95 @@
-import React, { useState } from "react";
+import { usePortfolio } from "../../context/PortfolioContext";
+import { useStore } from "../../stores";
+import type { FinderItem } from "../../lib/api";
 
-interface FileItem {
+interface TreeItem {
+  id: string;
   name: string;
-  type: "folder" | "file";
-  link?: string;
-  children?: FileItem[];
+  type: "folder" | "file" | "project";
+  link?: string | null;
+  icon?: string | null;
+  children?: TreeItem[];
 }
 
-const fileSystem: FileItem[] = [
-  {
-    name: "Projects",
-    type: "folder",
-    children: [
-      { name: "WaterFilterNet", type: "file", link: "https://waterfilternet.com" },
-      { name: "Choirokoitia Heritage App", type: "file", link: "https://github.com/chknuggt" },
-      { name: "Chess Game (Unity)", type: "file", link: "https://github.com/chknuggt" },
-      { name: "SaaS CMS Builder", type: "file", link: "https://github.com/chknuggt" },
-      { name: "AI Trading Pipeline", type: "file", link: "https://github.com/chknuggt" },
-      { name: "macOS Portfolio", type: "file", link: "https://github.com/chknuggt" },
-    ]
-  },
-  {
-    name: "Documents",
-    type: "folder",
-    children: [
-      { name: "Resume.pdf", type: "file", link: "/resume.pdf" },
-    ]
-  },
-  {
-    name: "Downloads",
-    type: "folder",
-    children: []
-  },
-  {
-    name: "Desktop",
-    type: "folder",
-    children: []
-  },
-];
+const buildTree = (items: FinderItem[], parentId: string | null = null): TreeItem[] =>
+  items
+    .filter((i) => i.parent_id === parentId)
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((i) => ({
+      id: i.id,
+      name: i.name,
+      type: i.type,
+      link: i.link,
+      icon: i.icon,
+      children: i.type === "folder" ? buildTree(items, i.id) : undefined,
+    }));
 
-const sidebarFavorites = [
-  { name: "Recents", icon: "i-bi:clock" },
-  { name: "Applications", icon: "i-bi:grid-3x3-gap" },
-  { name: "Desktop", icon: "i-bi:display" },
-  { name: "Documents", icon: "i-bi:file-earmark" },
-  { name: "Downloads", icon: "i-bi:arrow-down-circle" },
-];
+function ProjectIcon({ name, icon }: { name: string; icon?: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const initial = name.charAt(0).toUpperCase();
 
-const sidebarLocations = [
-  { name: "marioselef's Mac", icon: "i-bi:laptop" },
-];
+  if (icon && !failed) {
+    return (
+      <img
+        src={icon}
+        className="w-16 h-16 drop-shadow-sm object-contain rounded-2xl"
+        alt=""
+        draggable={false}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <div className="w-16 h-16 flex items-center justify-center rounded-2xl drop-shadow-sm" style={{ background: "#a3aaae" }}>
+      <span className="font-semibold text-2xl" style={{ color: "#f5f5f7", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>{initial}</span>
+    </div>
+  );
+}
+
 
 export default function Finder() {
+  const { finderItems, projects } = usePortfolio();
+  const finderPath = useStore((state) => state.finderPath);
+  const setFinderPath = useStore((state) => state.setFinderPath);
+  const dark = useStore((state) => state.dark);
+
+  const fileSystem = useMemo(() => {
+    const tree = buildTree(finderItems);
+    const projectsFolder = tree.find((i) => i.name === "Projects" && i.type === "folder");
+    if (projectsFolder) {
+      const injected: TreeItem[] = projects.map((p) => ({
+        id: p.id,
+        name: `${p.title}.proj`,
+        type: "project",
+        link: p.github_url || p.live_url || null,
+        icon: p.icon || null,
+      }));
+      projectsFolder.children = [...(projectsFolder.children ?? []), ...injected];
+    }
+    return tree;
+  }, [finderItems, projects]);
+
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [history, setHistory] = useState<string[][]>([[]]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  const getCurrentItems = (path?: string[]): FileItem[] => {
+  // Navigate to finderPath when Finder opens
+  useEffect(() => {
+    if (finderPath) {
+      const path = [finderPath];
+      setCurrentPath(path);
+      setHistory([[],  path]);
+      setHistoryIndex(1);
+      setFinderPath(null);
+    }
+  }, [finderPath]);
+
+  const getCurrentItems = (path?: string[]): TreeItem[] => {
     const p = path ?? currentPath;
     let items = fileSystem;
     for (const segment of p) {
-      const folder = items.find(i => i.name === segment && i.type === "folder");
+      const folder = items.find((i) => i.name === segment && (i.type === "folder"));
       if (folder?.children) items = folder.children;
       else break;
     }
@@ -95,7 +123,7 @@ export default function Finder() {
     }
   };
 
-  const handleDoubleClick = (item: FileItem) => {
+  const handleDoubleClick = (item: TreeItem) => {
     if (item.type === "folder") {
       navigateTo([...currentPath, item.name]);
     } else if (item.link) {
@@ -103,15 +131,24 @@ export default function Finder() {
     }
   };
 
-  const handleSidebarClick = (name: string) => {
-    const folder = fileSystem.find(i => i.name === name);
-    if (folder) {
-      navigateTo([name]);
-    } else if (name === "marioselef's Mac") {
-      navigateTo([]);
-    } else {
-      navigateTo([]);
+  const renderIcon = (item: TreeItem) => {
+    if (item.type === "folder") {
+      return <img src="/img/icons/folder-blue.png" className="w-16 h-16 drop-shadow-sm" alt="" draggable={false} />;
     }
+    if (item.type === "project") {
+      return <ProjectIcon name={item.name} icon={item.icon} />;
+    }
+    return (
+      <div className="w-16 h-16 flex items-center justify-center">
+        <span className="i-bi:file-earmark-text text-4xl text-gray-400" />
+      </div>
+    );
+  };
+
+  const handleSidebarClick = (name: string) => {
+    const folder = fileSystem.find((i) => i.name === name);
+    if (folder) navigateTo([name]);
+    else navigateTo([]);
   };
 
   const items = getCurrentItems();
@@ -123,35 +160,32 @@ export default function Finder() {
       <div
         className="flex items-center h-12 px-2 border-b"
         style={{
-          borderColor: "rgba(0,0,0,0.12)",
-          background: "linear-gradient(180deg, rgba(244,244,244,0.95) 0%, rgba(234,234,234,0.95) 100%)",
+          borderColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.12)",
+          background: dark
+            ? "linear-gradient(180deg, rgba(40,40,40,0.98) 0%, rgba(30,30,30,0.98) 100%)"
+            : "linear-gradient(180deg, rgba(244,244,244,0.95) 0%, rgba(234,234,234,0.95) 100%)",
           backdropFilter: "blur(20px)",
         }}
       >
-        {/* Nav buttons */}
         <div className="flex items-center gap-1 mr-3">
           <button
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-black/5 disabled:opacity-25"
+            className={`w-7 h-7 flex items-center justify-center rounded disabled:opacity-25 ${dark ? "hover:bg-white/10" : "hover:bg-black/5"}`}
             onClick={goBack}
             disabled={historyIndex === 0}
           >
-            <span className="i-bi:chevron-left text-sm text-gray-600" />
+            <span className={`i-bi:chevron-left text-sm ${dark ? "text-gray-300" : "text-gray-600"}`} />
           </button>
           <button
-            className="w-7 h-7 flex items-center justify-center rounded hover:bg-black/5 disabled:opacity-25"
+            className={`w-7 h-7 flex items-center justify-center rounded disabled:opacity-25 ${dark ? "hover:bg-white/10" : "hover:bg-black/5"}`}
             onClick={goForward}
             disabled={historyIndex >= history.length - 1}
           >
-            <span className="i-bi:chevron-right text-sm text-gray-600" />
+            <span className={`i-bi:chevron-right text-sm ${dark ? "text-gray-300" : "text-gray-600"}`} />
           </button>
         </div>
-
-        {/* Title */}
-        <div className="flex-1 text-center font-semibold text-gray-800 text-base">
+        <div className={`flex-1 text-center font-semibold text-base ${dark ? "text-gray-100" : "text-gray-800"}`}>
           {currentTitle}
         </div>
-
-        {/* Right toolbar icons */}
         <div className="flex items-center gap-1">
           <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-black/5">
             <span className="i-bi:grid-3x3 text-sm text-gray-500" />
@@ -167,76 +201,72 @@ export default function Finder() {
         <div
           className="w-44 py-2 overflow-auto border-r flex-shrink-0"
           style={{
-            borderColor: "rgba(0,0,0,0.1)",
-            background: "rgba(244,244,246,0.85)",
+            borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.1)",
+            background: dark ? "rgba(30,30,32,0.95)" : "rgba(244,244,246,0.85)",
             backdropFilter: "blur(20px)",
           }}
         >
-          {/* Favorites */}
           <div className="px-4 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
             Favorites
           </div>
-          {sidebarFavorites.map(item => (
+          {fileSystem.filter(i => i.type === "folder").map((item) => (
             <button
-              key={item.name}
+              key={item.id}
               className={`w-full text-left px-4 py-[3px] flex items-center gap-2 text-[13px] ${
-                (currentPath.length === 1 && currentPath[0] === item.name)
+                currentPath.length === 1 && currentPath[0] === item.name
                   ? "bg-blue-500/15 text-blue-600 rounded-md mx-1 w-[calc(100%-8px)]"
-                  : "text-gray-700 hover:bg-black/5"
+                  : dark ? "text-gray-300 hover:bg-white/8" : "text-gray-700 hover:bg-black/5"
               }`}
               onClick={() => handleSidebarClick(item.name)}
             >
-              <span className={`${item.icon} text-base text-blue-500`} />
+              <span className="i-bi:folder-fill text-base text-blue-500" />
               {item.name}
             </button>
           ))}
 
-          {/* Locations */}
           <div className="px-4 py-1 mt-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
             Locations
           </div>
-          {sidebarLocations.map(item => (
-            <button
-              key={item.name}
-              className={`w-full text-left px-4 py-[3px] flex items-center gap-2 text-[13px] ${
-                currentPath.length === 0
-                  ? "bg-blue-500/15 text-blue-600 rounded-md mx-1 w-[calc(100%-8px)]"
-                  : "text-gray-700 hover:bg-black/5"
-              }`}
-              onClick={() => handleSidebarClick(item.name)}
-            >
-              <span className={`${item.icon} text-base text-gray-500`} />
-              {item.name}
-            </button>
-          ))}
+          <button
+            className={`w-full text-left px-4 py-[3px] flex items-center gap-2 text-[13px] ${
+              currentPath.length === 0
+                ? "bg-blue-500/15 text-blue-600 rounded-md mx-1 w-[calc(100%-8px)]"
+                : dark ? "text-gray-300 hover:bg-white/8" : "text-gray-700 hover:bg-black/5"
+            }`}
+            onClick={() => navigateTo([])}
+          >
+            <span className="i-bi:laptop text-base text-gray-500" />
+            marioselef's Mac
+          </button>
         </div>
 
-        {/* Main content - icon grid */}
-        <div className="flex-1 p-6 overflow-auto" style={{ background: "rgb(255,255,255)" }}>
+        {/* Main content */}
+        <div
+          className="flex-1 p-6 overflow-auto"
+          style={{ background: dark ? "rgb(28,28,30)" : "rgb(255,255,255)" }}
+        >
           {items.length === 0 ? (
             <div className="h-full flex items-center justify-center text-gray-400 text-sm">
               This folder is empty
             </div>
           ) : (
             <div className="flex flex-wrap gap-6">
-              {items.map(item => (
+              {items.map((item) => (
                 <div
-                  key={item.name}
+                  key={item.id}
                   className={`flex flex-col items-center w-24 cursor-default select-none rounded-lg p-2 ${
-                    selectedItem === item.name ? "bg-blue-500/15" : "hover:bg-black/3"
+                    selectedItem === item.id
+                      ? "bg-blue-500/15"
+                      : dark ? "hover:bg-white/5" : "hover:bg-black/3"
                   }`}
-                  onClick={() => setSelectedItem(item.name)}
+                  onClick={() => setSelectedItem(item.id)}
                   onDoubleClick={() => handleDoubleClick(item)}
                 >
-                  {item.type === "folder" ? (
-                    <img src="/img/icons/folder-blue.png" className="w-16 h-16 drop-shadow-sm" alt="" draggable={false} />
-                  ) : (
-                    <div className="w-16 h-16 flex items-center justify-center">
-                      <span className="i-bi:file-earmark-text text-4xl text-gray-400" />
-                    </div>
-                  )}
+                  {renderIcon(item)}
                   <span className={`text-xs mt-1 text-center leading-tight line-clamp-2 ${
-                    selectedItem === item.name ? "text-blue-600" : "text-gray-800"
+                    selectedItem === item.id
+                      ? "text-blue-500"
+                      : dark ? "text-gray-200" : "text-gray-800"
                   }`}>
                     {item.name}
                   </span>
@@ -247,10 +277,12 @@ export default function Finder() {
         </div>
       </div>
 
-      {/* Status bar */}
       <div
         className="px-4 py-1 border-t text-[11px] text-gray-400"
-        style={{ borderColor: "rgba(0,0,0,0.1)", background: "rgba(244,244,246,0.9)" }}
+        style={{
+          borderColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
+          background: dark ? "rgba(30,30,32,0.95)" : "rgba(244,244,246,0.9)",
+        }}
       >
         {items.length} item{items.length !== 1 ? "s" : ""}
       </div>

@@ -6,10 +6,10 @@ import { gfm } from "@milkdown/preset-gfm";
 import { history } from "@milkdown/plugin-history";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { useStore } from "../../stores";
+import { usePortfolio } from "../../context/PortfolioContext";
 
-const MilkdownEditor = () => {
-  const { typoraMd, setTyporaMd } = useStore(useShallow((state) => ({
-    typoraMd: state.typoraMd,
+const MilkdownEditor = ({ initialContent }: { initialContent: string }) => {
+  const { setTyporaMd } = useStore(useShallow((state) => ({
     setTyporaMd: state.setTyporaMd
   })));
 
@@ -17,7 +17,7 @@ const MilkdownEditor = () => {
     Editor.make()
       .config((ctx) => {
         ctx.set(rootCtx, root);
-        ctx.set(defaultValueCtx, typoraMd);
+        ctx.set(defaultValueCtx, initialContent);
         ctx
           .get(listenerCtx)
           .mounted((ctx) => {
@@ -42,9 +42,12 @@ const MilkdownEditor = () => {
 };
 
 export default function Typora() {
+  const { typoraDocument } = usePortfolio();
+  const initialContent = typoraDocument?.content ?? "";
+
   return (
     <MilkdownProvider>
-      <MilkdownEditor />
+      <MilkdownEditor initialContent={initialContent} />
     </MilkdownProvider>
   );
 }

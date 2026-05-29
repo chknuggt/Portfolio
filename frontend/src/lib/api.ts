@@ -19,6 +19,7 @@ export interface Project {
   github_url: string | null;
   technologies: string | null;
   markdown_file: string | null;
+  content: string | null;
   sort_order: number;
 }
 
@@ -26,7 +27,7 @@ export interface BearNote {
   id: string;
   title: string;
   excerpt: string;
-  file: string;
+  content: string | null;
   sort_order: number;
 }
 
@@ -73,7 +74,13 @@ export interface MusicTrack {
 
 export type AboutSections = Record<string, string>;
 
-export interface DesktopItem {
+export interface TyporaDocument {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface FinderItem {
   id: string;
   name: string;
   type: "folder" | "file";
@@ -99,5 +106,6 @@ export const api = {
   skills: () => get<Skill[]>("/skills"),
   music: () => get<MusicTrack[]>("/music"),
   about: () => get<AboutSections>("/about"),
-  desktopItems: () => get<DesktopItem[]>("/desktop-items"),
+  finderItems: () => get<FinderItem[]>("/finder-items"),
+  typoraDocument: () => get<TyporaDocument>("/typora-document"),
 };

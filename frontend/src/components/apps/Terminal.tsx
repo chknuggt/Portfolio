@@ -1,7 +1,7 @@
 import React from "react";
-import { terminal } from "../../configs";
 import type { TerminalData } from "../../types";
 import { useInterval } from "../../hooks";
+import { usePortfolio } from "../../context/PortfolioContext";
 
 const CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const EMOJIS = ["\\(o_o)/", "(˚Δ˚)b", "(^-^*)", "(‵′)", "\\(°ˊДˋ°)/", "(‵′)"];
@@ -13,6 +13,10 @@ const getEmoji = () => {
 interface TerminalState {
   rmrf: boolean;
   content: JSX.Element[];
+}
+
+interface TerminalCoreProps {
+  terminalData: TerminalData[];
 }
 
 // rain animation is adopted from: https://codepen.io/P3R0/pen/MwgoKv
@@ -58,10 +62,7 @@ const HowDare = ({ setRMRF }: { setRMRF: (value: boolean) => void }) => {
 
     setDrops(
       drops.map((y) => {
-        // sends the drop back to the top randomly after it has crossed the screen
-        // adding randomness to the reset to make the drops scattered on the Y axis
         if (y * FONT_SIZE > canvas.height && Math.random() > 0.975) return 1;
-        // increments Y coordinate
         else return y + 1;
       })
     );
@@ -85,17 +86,17 @@ const HowDare = ({ setRMRF }: { setRMRF: (value: boolean) => void }) => {
   );
 };
 
-export default class Terminal extends React.Component<{}, TerminalState> {
+class TerminalCore extends React.Component<TerminalCoreProps, TerminalState> {
   private history = [] as string[];
   private curHistory = 0;
   private curInputTimes = 0;
   private curDirPath = [] as any;
-  private curChildren = terminal as any;
+  private curChildren: any;
   private commands: {
     [key: string]: { (): void } | { (arg?: string): void };
   };
 
-  constructor(props: {}) {
+  constructor(props: TerminalCoreProps) {
     super(props);
     this.state = {
       content: [],
@@ -111,8 +112,15 @@ export default class Terminal extends React.Component<{}, TerminalState> {
   }
 
   componentDidMount() {
+    this.curChildren = this.props.terminalData;
     this.reset();
     this.generateInputRow(this.curInputTimes);
+  }
+
+  componentDidUpdate(prevProps: TerminalCoreProps) {
+    if (prevProps.terminalData !== this.props.terminalData && this.curChildren === undefined) {
+      this.curChildren = this.props.terminalData;
+    }
   }
 
   reset = () => {
@@ -134,7 +142,7 @@ export default class Terminal extends React.Component<{}, TerminalState> {
   };
 
   getCurChildren = () => {
-    let children = terminal as any;
+    let children = this.props.terminalData as any;
     for (const name of this.curDirPath) {
       children = children.find((item: TerminalData) => {
         return item.title === name && item.type === "folder";
@@ -143,22 +151,17 @@ export default class Terminal extends React.Component<{}, TerminalState> {
     return children;
   };
 
-  // move into a specified folder
   cd = (args?: string) => {
     if (args === undefined || args === "~") {
-      // move to root
       this.curDirPath = [];
-      this.curChildren = terminal;
+      this.curChildren = this.props.terminalData;
     } else if (args === ".") {
-      // stay in the current folder
       return;
     } else if (args === "..") {
-      // move to parent folder
       if (this.curDirPath.length === 0) return;
       this.curDirPath.pop();
       this.curChildren = this.getCurChildren();
     } else {
-      // move to certain child folder
       const target = this.curChildren.find((item: TerminalData) => {
         return item.title === args && item.type === "folder";
       });
@@ -174,7 +177,6 @@ export default class Terminal extends React.Component<{}, TerminalState> {
     }
   };
 
-  // display content of a specified folder
   ls = () => {
     const result = [];
     for (const item of this.curChildren) {
@@ -193,7 +195,6 @@ export default class Terminal extends React.Component<{}, TerminalState> {
     );
   };
 
-  // display content of a specified file
   cat = (args?: string) => {
     const file = this.curChildren.find((item: TerminalData) => {
       return item.title === args && item.type === "file";
@@ -209,7 +210,6 @@ export default class Terminal extends React.Component<{}, TerminalState> {
     }
   };
 
-  // clear terminal
   clear = () => {
     this.curInputTimes += 1;
     this.reset();
@@ -283,13 +283,11 @@ export default class Terminal extends React.Component<{}, TerminalState> {
     const input = inputText.split(" ");
 
     if (keyCode === "Enter") {
-      // ----------- run command -----------
       this.history.push(inputText);
 
       const cmd = input[0];
       const args = input[1];
 
-      // we can't edit the past input
       inputElement.setAttribute("readonly", "true");
 
       if (inputText.substring(0, 6) === "rm -rf") this.setState({ rmrf: true });
@@ -302,21 +300,17 @@ export default class Terminal extends React.Component<{}, TerminalState> {
         );
       }
 
-      // point to the last history command
       this.curHistory = this.history.length;
 
-      // generate new input row
       this.curInputTimes += 1;
       this.generateInputRow(this.curInputTimes);
     } else if (keyCode === "ArrowUp") {
-      // ----------- previous history command -----------
       if (this.history.length > 0) {
         if (this.curHistory > 0) this.curHistory--;
         const historyCommand = this.history[this.curHistory];
         inputElement.value = historyCommand;
       }
     } else if (keyCode === "ArrowDown") {
-      // ----------- next history command -----------
       if (this.history.length > 0) {
         if (this.curHistory < this.history.length) this.curHistory++;
         if (this.curHistory === this.history.length) inputElement.value = "";
@@ -326,9 +320,7 @@ export default class Terminal extends React.Component<{}, TerminalState> {
         }
       }
     } else if (keyCode === "Tab") {
-      // ----------- auto complete -----------
       inputElement.value = this.autoComplete(inputText);
-      // prevent tab outside the terminal
       e.preventDefault();
     }
   };
@@ -387,4 +379,50 @@ export default class Terminal extends React.Component<{}, TerminalState> {
       </div>
     );
   }
+}
+
+const DREAM_FILE: TerminalData = {
+  id: "my-dream",
+  title: "my-dream.cpp",
+  type: "file",
+  content: (
+    <div className="py-1">
+      <div>
+        <span className="text-yellow-400">while</span>(
+        <span className="text-blue-400">sleeping</span>) <span>{"{"}</span>
+      </div>
+      <div>
+        <span className="text-blue-400 ml-9">money</span>
+        <span className="text-yellow-400">++</span>;
+      </div>
+      <div>
+        <span>{"}"}</span>
+      </div>
+    </div>
+  )
+};
+
+export default function Terminal() {
+  const { about } = usePortfolio();
+
+  const terminalData = useMemo((): TerminalData[] => {
+    const aboutFiles: TerminalData[] = Object.entries(about).map(([key, content]) => ({
+      id: `about-${key}`,
+      title: `${key}.txt`,
+      type: "file",
+      content: <div className="py-1">{content}</div>,
+    }));
+
+    return [
+      {
+        id: "about",
+        title: "about",
+        type: "folder",
+        children: aboutFiles,
+      },
+      DREAM_FILE,
+    ];
+  }, [about]);
+
+  return <TerminalCore terminalData={terminalData} />;
 }

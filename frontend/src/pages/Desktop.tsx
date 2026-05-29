@@ -4,34 +4,54 @@ import { apps, wallpapers } from "../configs";
 import { minMarginY } from "../utils";
 import type { MacActions } from "../types";
 import { useStore } from "../stores";
+import { usePortfolio } from "../context/PortfolioContext";
+import type { FinderItem } from "../lib/api";
 
 function DesktopFolders({ openApp }: { openApp: (id: string) => void }) {
-  const folders = [
-    { name: "Projects", id: "finder" },
-    { name: "Documents", id: "finder" },
-  ];
+  const { finderItems } = usePortfolio();
+  const setFinderPath = useStore((state) => state.setFinderPath);
 
-  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({
-    Projects: { x: 20, y: 40 },
-    Documents: { x: 20, y: 140 },
-  });
+  const topLevel = useMemo(() => {
+    const desktopFolder = finderItems.find((item) => item.name === "Desktop" && item.parent_id === null);
+    if (!desktopFolder) return [];
+    return finderItems.filter((item) => item.parent_id === desktopFolder.id);
+  }, [finderItems]);
+
+  const initialPositions = useMemo(() => {
+    const pos: Record<string, { x: number; y: number }> = {};
+    topLevel.forEach((item, i) => {
+      pos[item.id] = { x: 20, y: 40 + i * 100 };
+    });
+    return pos;
+  }, [topLevel]);
+
+  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>(initialPositions);
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
 
-  const handleMouseDown = (e: React.MouseEvent, name: string) => {
-    setSelected(name);
-    setDragging(name);
+  useEffect(() => {
+    setPositions((prev) => {
+      const next = { ...prev };
+      topLevel.forEach((item, i) => {
+        if (!next[item.id]) next[item.id] = { x: 20, y: 40 + i * 100 };
+      });
+      return next;
+    });
+  }, [topLevel]);
+
+  const handleMouseDown = (e: React.MouseEvent, id: string) => {
+    setSelected(id);
+    setDragging(id);
     dragOffset.current = {
-      x: e.clientX - positions[name].x,
-      y: e.clientY - positions[name].y,
+      x: e.clientX - (positions[id]?.x ?? 0),
+      y: e.clientY - (positions[id]?.y ?? 0),
     };
     e.preventDefault();
   };
 
   useEffect(() => {
     if (!dragging) return;
-
     const handleMouseMove = (e: MouseEvent) => {
       setPositions((prev) => ({
         ...prev,
@@ -41,9 +61,7 @@ function DesktopFolders({ openApp }: { openApp: (id: string) => void }) {
         },
       }));
     };
-
     const handleMouseUp = () => setDragging(null);
-
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
     return () => {
@@ -52,7 +70,6 @@ function DesktopFolders({ openApp }: { openApp: (id: string) => void }) {
     };
   }, [dragging]);
 
-  // Deselect when clicking desktop background
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -62,32 +79,46 @@ function DesktopFolders({ openApp }: { openApp: (id: string) => void }) {
     return () => window.removeEventListener("click", handleClick);
   }, []);
 
+  const handleActivate = (item: FinderItem) => {
+    if (item.type === "folder") {
+      setFinderPath(item.name);
+      openApp("finder");
+    } else if (item.link) {
+      window.open(item.link, "_blank");
+    }
+  };
+
+  const getIcon = (item: FinderItem) => {
+    if (item.icon) return item.icon;
+    return item.type === "folder" ? "/img/icons/folder-blue.png" : "/img/icons/file.png";
+  };
+
   return (
     <>
-      {folders.map((folder) => (
+      {topLevel.map((item) => (
         <div
-          key={folder.name}
+          key={item.id}
           className={`desktop-folder absolute z-5 flex flex-col items-center w-20 cursor-default select-none rounded-lg p-1.5 ${
-            selected === folder.name ? "bg-white/20" : "hover:bg-white/10"
+            selected === item.id ? "bg-white/20" : "hover:bg-white/10"
           }`}
           style={{
-            left: positions[folder.name].x,
-            top: positions[folder.name].y,
+            left: positions[item.id]?.x ?? 20,
+            top: positions[item.id]?.y ?? 40,
           }}
-          onMouseDown={(e) => handleMouseDown(e, folder.name)}
-          onDoubleClick={() => openApp(folder.id)}
-          onClick={() => setSelected(folder.name)}
+          onMouseDown={(e) => handleMouseDown(e, item.id)}
+          onDoubleClick={() => handleActivate(item)}
+          onClick={() => setSelected(item.id)}
         >
           <img
-            src="/img/icons/folder-blue.png"
+            src={getIcon(item)}
             className="w-14 h-14 drop-shadow-md pointer-events-none"
-            alt={folder.name}
+            alt={item.name}
             draggable={false}
           />
           <span className={`text-[11px] mt-0.5 text-center drop-shadow-sm font-medium ${
-            selected === folder.name ? "bg-blue-500 text-white px-1 rounded" : "text-white"
+            selected === item.id ? "bg-blue-500 text-white px-1 rounded" : "text-white"
           }`}>
-            {folder.name}
+            {item.name}
           </span>
         </div>
       ))}

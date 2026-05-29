@@ -1,8 +1,9 @@
 import React from "react";
-import { websites, wallpapers } from "../../configs";
+import { wallpapers } from "../../configs";
 import { checkURL } from "../../utils";
 import type { SiteSectionData, SiteData } from "../../types";
 import { useStore } from "../../stores";
+import { usePortfolio } from "../../context/PortfolioContext";
 
 interface SafariState {
   goURL: string;
@@ -16,10 +17,13 @@ interface SafariProps {
 interface NavProps {
   width: number;
   setGoURL: (url: string) => void;
+  sections: SiteSectionData[];
 }
 
-interface NavSectionProps extends NavProps {
+interface NavSectionProps {
+  width: number;
   section: SiteSectionData;
+  setGoURL: (url: string) => void;
 }
 
 const NavSection = ({ width, section, setGoURL }: NavSectionProps) => {
@@ -27,7 +31,7 @@ const NavSection = ({ width, section, setGoURL }: NavSectionProps) => {
 
   return (
     <div className="mx-auto w-full max-w-screen-md" p="t-8 x-4">
-      <div className="font-medium ml-2" text="xl sm:2xl">
+      <div className="font-medium ml-2 text-c-black" text="xl sm:2xl">
         {section.title}
       </div>
       <div className={`mt-3 grid grid-flow-row ${grid}`}>
@@ -54,7 +58,7 @@ const NavSection = ({ width, section, setGoURL }: NavSectionProps) => {
                 </div>
               )}
             </div>
-            <span m="t-2 x-auto" text-sm>
+            <span m="t-2 x-auto" className="text-sm text-c-black">
               {site.title}
             </span>
           </div>
@@ -66,7 +70,7 @@ const NavSection = ({ width, section, setGoURL }: NavSectionProps) => {
 
 const numTracker = Math.floor(Math.random() * 99 + 1);
 
-const NavPage = ({ width, setGoURL }: NavProps) => {
+const NavPage = ({ width, setGoURL, sections }: NavProps) => {
   const dark = useStore((state) => state.dark);
 
   const grid = width < 640 ? "grid-cols-4" : "grid-cols-8";
@@ -80,11 +84,9 @@ const NavPage = ({ width, setGoURL }: NavProps) => {
       }}
     >
       <div className="w-full min-h-full pt-8 bg-c-100/80 backdrop-blur-2xl">
-        {/* Favorites */}
-        <NavSection section={websites.favorites} setGoURL={setGoURL} width={width} />
-
-        {/* Frequently Visited */}
-        <NavSection section={websites.freq} setGoURL={setGoURL} width={width} />
+        {sections.map((section) => (
+          <NavSection key={section.title} section={section} setGoURL={setGoURL} width={width} />
+        ))}
 
         {/* Privacy Report */}
         <div className="mx-auto w-full max-w-screen-md" p="t-8 x-4 b-16">
@@ -93,7 +95,7 @@ const NavPage = ({ width, setGoURL }: NavProps) => {
           </div>
           <div
             className={`h-16 w-full mt-4 grid ${grid} shadow-md rounded-xl text-sm`}
-            bg="gray-50/70 dark:gray-600/50"
+            bg="gray-50/70 dark:bg-gray-600/50"
           >
             <div className="col-start-1 col-span-1 flex-center space-x-2">
               <span className="i-fa-solid:shield-alt text-2xl" />
@@ -139,7 +141,6 @@ const SafariIframe = ({ url, onBack }: { url: string; onBack: () => void }) => {
 
   useEffect(() => {
     setShowFallback(false);
-    // Show fallback quickly if iframe likely blocked
     timerRef.current = setTimeout(() => setShowFallback(true), 500);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [url]);
@@ -189,10 +190,28 @@ const SafariIframe = ({ url, onBack }: { url: string; onBack: () => void }) => {
 
 const Safari = ({ width }: SafariProps) => {
   const wifi = useStore((state) => state.wifi);
+  const { socialLinks } = usePortfolio();
+
   const [state, setState] = useState<SafariState>({
     goURL: "",
     currentURL: ""
   });
+
+  const sections = useMemo((): SiteSectionData[] => {
+    const categories: Record<string, SiteSectionData> = {};
+    for (const link of socialLinks) {
+      if (!categories[link.category]) {
+        categories[link.category] = { title: link.category, sites: [] };
+      }
+      categories[link.category].sites.push({
+        id: link.id,
+        title: link.title,
+        img: link.img,
+        link: link.link,
+      });
+    }
+    return Object.values(categories);
+  }, [socialLinks]);
 
   const setGoURL = (url: string) => {
     const isValid = checkURL(url);
@@ -264,7 +283,7 @@ const Safari = ({ width }: SafariProps) => {
       {/* browser content */}
       {wifi ? (
         state.goURL === "" ? (
-          <NavPage setGoURL={setGoURL} width={width as number} />
+          <NavPage setGoURL={setGoURL} width={width as number} sections={sections} />
         ) : (
           <SafariIframe url={state.goURL} onBack={() => setGoURL("")} />
         )

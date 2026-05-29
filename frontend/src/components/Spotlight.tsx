@@ -1,13 +1,16 @@
 import React from "react";
 import { format } from "date-fns";
-import { apps, launchpadApps } from "../configs";
-import type { LaunchpadData, AppsData } from "../types";
+import { apps } from "../configs";
+import type { AppsData } from "../types";
 import { useClickOutside } from "../hooks";
+import { usePortfolio } from "../context/PortfolioContext";
 
-const APPS: { [key: string]: (LaunchpadData | AppsData)[] } = {
-  app: apps,
-  portfolio: launchpadApps
-};
+interface SpotlightItem {
+  id: string;
+  title: string;
+  img: string;
+  link?: string;
+}
 
 const getRandom = (min: number, max: number) => {
   min = Math.ceil(min);
@@ -37,6 +40,7 @@ export default function Spotlight({
 }: SpotlightProps) {
   const spotlightRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { projects } = usePortfolio();
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [clickedID, setClickedID] = useState("");
@@ -52,11 +56,27 @@ export default function Spotlight({
   const textBlack = "text-c-black";
   const textSelected = "bg-blue-500";
 
+  const portfolioApps = useMemo<SpotlightItem[]>(
+    () =>
+      projects.map((p) => ({
+        id: p.id,
+        title: p.title,
+        img: p.icon,
+        link: p.live_url || p.github_url || undefined,
+      })),
+    [projects]
+  );
+
+  const APPS = useMemo<{ [key: string]: (AppsData | SpotlightItem)[] }>(
+    () => ({ app: apps, portfolio: portfolioApps }),
+    [portfolioApps]
+  );
+
   useClickOutside(spotlightRef, toggleSpotlight, [btnRef]);
 
   useEffect(() => {
     updateAppList();
-  }, [searchText]);
+  }, [searchText, APPS]);
 
   useEffect(() => {
     updateCurrentDetails();
@@ -64,11 +84,7 @@ export default function Spotlight({
 
   useEffect(() => {
     if (appIdList.length === 0) return;
-    // find app's index given its id
-    const newSelectedIndex = appIdList.findIndex((item) => {
-      return item === clickedID;
-    });
-    // update index
+    const newSelectedIndex = appIdList.findIndex((item) => item === clickedID);
     updateHighlight(selectedIndex, newSelectedIndex);
     setSelectedIndex(newSelectedIndex);
   }, [clickedID]);
@@ -82,18 +98,14 @@ export default function Spotlight({
 
   const search = (type: string) => {
     if (searchText === "") return [];
-
     const text = searchText.toLowerCase();
     return APPS[type].filter(
-      (item: LaunchpadData | AppsData) =>
+      (item: any) =>
         item.title.toLowerCase().includes(text) || item.id.toLowerCase().includes(text)
     );
   };
 
-  const handleClick = (id: string) => {
-    setClickedID(id);
-  };
-
+  const handleClick = (id: string) => setClickedID(id);
   const handleDoubleClick = (id: string) => {
     setClickedID(id);
     setDoubleClicked(true);
@@ -133,7 +145,7 @@ export default function Spotlight({
           onDoubleClick={() => handleDoubleClick(app.id)}
         >
           <div className="w-8 flex-center">
-            <img w-5 src={app.img} alt={app.title} title={app.title} />
+            <img w-5 src={(app as any).img} alt={app.title} title={app.title} />
           </div>
           <div className="flex-1 hstack overflow-hidden whitespace-nowrap">
             {app.title}
@@ -143,10 +155,7 @@ export default function Spotlight({
       typeAppIdList.push(app.id);
     }
 
-    return {
-      appList: typeAppList,
-      appIdList: typeAppIdList
-    };
+    return { appList: typeAppList, appIdList: typeAppIdList };
   };
 
   const updateAppList = () => {
@@ -154,7 +163,6 @@ export default function Spotlight({
     const portfolio = getTypeAppList("portfolio", app.appIdList.length);
 
     const newAppIdList = [...app.appIdList, ...portfolio.appIdList];
-    // don't show app details when there is no associating app
     if (newAppIdList.length === 0) setCurDetails(null);
 
     const newAppList = (
@@ -181,10 +189,7 @@ export default function Spotlight({
   };
 
   const setCurrentDetailsWithType = (app: any, type: string) =>
-    setCurDetails({
-      ...app,
-      type
-    });
+    setCurDetails({ ...app, type });
 
   const updateCurrentDetails = () => {
     if (appIdList.length === 0 || searchText === "") {
@@ -195,7 +200,7 @@ export default function Spotlight({
     const appId = appIdList[selectedIndex];
     const element = document.querySelector(`#spotlight-${appId}`) as HTMLElement;
     const type = element.dataset.appType as string;
-    const app = APPS[type].find((item: LaunchpadData | AppsData) => item.id === appId);
+    const app = APPS[type].find((item: any) => item.id === appId);
 
     setCurrentDetailsWithType(app, type);
   };
@@ -203,14 +208,12 @@ export default function Spotlight({
   const updateHighlight = (prevIndex: number, curIndex: number) => {
     if (appIdList.length === 0) return;
 
-    // remove highlight
     const prevAppId = appIdList[prevIndex];
     const prev = document.querySelector(`#spotlight-${prevAppId}`) as HTMLElement;
     prev.className = prev.className
       .replace(textWhite, textBlack)
       .replace(textSelected, "bg-transparent");
 
-    // add highlight
     const curAppId = appIdList[curIndex];
     const cur = document.querySelector(`#spotlight-${curAppId}`) as HTMLElement;
     cur.className = cur.className
@@ -222,29 +225,21 @@ export default function Spotlight({
     const keyCode = e.key;
     const numApps = appIdList.length;
 
-    // ----------- select next app -----------
     if (keyCode === "ArrowDown" && selectedIndex < numApps - 1) {
       updateHighlight(selectedIndex, selectedIndex + 1);
       setSelectedIndex(selectedIndex + 1);
-    }
-    // ----------- select previous app -----------
-    else if (keyCode === "ArrowUp" && selectedIndex > 0) {
+    } else if (keyCode === "ArrowUp" && selectedIndex > 0) {
       updateHighlight(selectedIndex, selectedIndex - 1);
       setSelectedIndex(selectedIndex - 1);
-    }
-    // ----------- launch app -----------
-    else if (keyCode === "Enter") {
+    } else if (keyCode === "Enter") {
       if (!curDetails) return;
       launchSelectedApp();
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // update highlighted line
     updateHighlight(selectedIndex, 0);
-    // current selected id go back to 0
     setSelectedIndex(0);
-    // update search text and associating app list
     setSearchText(e.target.value);
   };
 

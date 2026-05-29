@@ -2,7 +2,6 @@ import { useShallow } from "zustand/react/shallow";
 import React from "react";
 import { format } from "date-fns";
 import { isFullScreen } from "../../utils";
-import { music } from "../../configs";
 import type { MacActions } from "../../types";
 import { useAudioContext } from "../../context/AudioContext";
 import { useStore } from "../../stores";
@@ -86,7 +85,7 @@ const TopBar = (props: TopBarProps) => {
   //   src: music.audio,
   //   autoReplay: true
   // });
-  const {audio, audioState, controls, audioRef} = useAudioContext();
+  const {audio, audioState, controls, audioRef, track} = useAudioContext();
   const { winWidth, winHeight } = useWindowSize();
 
   const { volume, wifi } = useStore(useShallow((state) => ({
@@ -244,6 +243,7 @@ const TopBar = (props: TopBarProps) => {
             setBrightness={setSiteBrightness}
             toggleControlCenter={toggleControlCenter}
             btnRef={controlCenterBtnRef}
+            track={track}
           />
         )}
 

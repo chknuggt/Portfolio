@@ -2,8 +2,8 @@ import { useShallow } from "zustand/react/shallow";
 import React from "react";
 import Slider from "react-rangeslider";
 import "react-rangeslider/lib/index.css";
-import { music } from "../../configs";
 import { useStore } from "../../stores";
+import type { TrackInfo } from "../../context/AudioContext";
 import { useClickOutside } from "../../hooks";
 
 interface SliderProps {
@@ -35,6 +35,7 @@ interface CCMProps {
   setVolume: (value: number) => void;
   playing: boolean;
   btnRef: React.RefObject<HTMLDivElement>;
+  track: TrackInfo | null;
 }
 
 export default function ControlCenterMenu({
@@ -43,7 +44,8 @@ export default function ControlCenterMenu({
   setBrightness,
   setVolume,
   playing,
-  btnRef
+  btnRef,
+  track
 }: CCMProps) {
   const controlCenterRef = useRef<HTMLDivElement>(null);
   const { dark, wifi, brightness, bluetooth, airdrop, fullscreen, volume } = useStore(
@@ -150,10 +152,10 @@ export default function ControlCenterMenu({
         <SliderComponent icon="i-ion:volume-high" value={volume} setValue={setVolume} />
       </div>
       <div className="player cc-grid col-span-4 hstack space-x-2.5" p="y-2 l-2 r-4">
-        <img className="w-12 rounded-lg" src={music.cover} alt="cover art" />
+        {track?.cover && <img className="w-12 rounded-lg" src={track.cover} alt="cover art" />}
         <div flex-1>
-          <div className="font-medium">{music.title}</div>
-          <div className="cc-text">{music.artist}</div>
+          <div className="font-medium">{track?.title ?? ""}</div>
+          <div className="cc-text">{track?.artist ?? ""}</div>
         </div>
         {playing ? (
           <span className="i-bi:pause-fill text-2xl play" onClick={() => toggleAudio(false)} />

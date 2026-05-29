@@ -2,6 +2,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useMotionValue } from "framer-motion";
 import { apps } from "../../configs";
 import { useStore } from "../../stores";
+import { usePortfolio } from "../../context/PortfolioContext";
 
 interface DockProps {
   open: (id: string) => void;
@@ -24,6 +25,14 @@ export default function Dock({
     dockSize: state.dockSize,
     dockMag: state.dockMag
   })));
+
+  const { profile, about } = usePortfolio();
+
+  const dynamicLink = (id: string, fallback?: string) => {
+    if (id === "github") return profile?.github ?? fallback;
+    if (id === "chess") return about.chess_url ?? fallback;
+    return fallback;
+  };
 
   const [hovered, setHovered] = useState(true);
 
@@ -79,7 +88,7 @@ export default function Dock({
               desktop={app.desktop}
               openApp={openApp}
               isOpen={app.desktop && showApps[app.id]}
-              link={app.link}
+              link={dynamicLink(app.id, app.link)}
               dockSize={dockSize}
               dockMag={dockMag}
             />

@@ -10,7 +10,7 @@ import (
 )
 
 const listBearNotes = `-- name: ListBearNotes :many
-SELECT id, title, excerpt, file, sort_order FROM bear_notes ORDER BY sort_order ASC
+SELECT id, title, excerpt, sort_order, content FROM bear_notes ORDER BY sort_order ASC
 `
 
 func (q *Queries) ListBearNotes(ctx context.Context) ([]BearNote, error) {
@@ -26,8 +26,8 @@ func (q *Queries) ListBearNotes(ctx context.Context) ([]BearNote, error) {
 			&i.ID,
 			&i.Title,
 			&i.Excerpt,
-			&i.File,
 			&i.SortOrder,
+			&i.Content,
 		); err != nil {
 			return nil, err
 		}

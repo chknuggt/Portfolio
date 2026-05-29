@@ -8,11 +8,11 @@ import (
 )
 
 type bearNoteResponse struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	Excerpt   string `json:"excerpt"`
-	File      string `json:"file"`
-	SortOrder int32  `json:"sort_order"`
+	ID        string  `json:"id"`
+	Title     string  `json:"title"`
+	Excerpt   string  `json:"excerpt"`
+	Content   *string `json:"content"`
+	SortOrder int32   `json:"sort_order"`
 }
 
 func handleListBearNotes(q *queries.Queries) http.HandlerFunc {
@@ -28,7 +28,7 @@ func handleListBearNotes(q *queries.Queries) http.HandlerFunc {
 				ID:        uuidStr(n.ID),
 				Title:     n.Title,
 				Excerpt:   n.Excerpt,
-				File:      n.File,
+				Content:   n.Content,
 				SortOrder: n.SortOrder,
 			}
 		}

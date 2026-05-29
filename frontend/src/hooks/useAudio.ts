@@ -65,9 +65,8 @@ export function useAudio(props: HTMLAudioProps) {
 
   useEffect(() => {
     const el = ref.current!;
-
-    if (!el) return;
-
+    if (!el || !props.src) return;
+    el.src = props.src;
     setState({
       volume: el.volume,
       playing: !el.paused

@@ -3,7 +3,7 @@ import {
   api,
   type AboutSections,
   type BearNote,
-  type DesktopItem,
+  type FinderItem,
   type Education,
   type Experience,
   type MusicTrack,
@@ -11,6 +11,7 @@ import {
   type Project,
   type Skill,
   type SocialLink,
+  type TyporaDocument,
 } from "~/lib/api";
 
 interface PortfolioData {
@@ -23,7 +24,8 @@ interface PortfolioData {
   skills: Skill[];
   music: MusicTrack[];
   about: AboutSections;
-  desktopItems: DesktopItem[];
+  finderItems: FinderItem[];
+  typoraDocument: TyporaDocument | null;
   loaded: boolean;
 }
 
@@ -37,7 +39,8 @@ const defaultData: PortfolioData = {
   skills: [],
   music: [],
   about: {},
-  desktopItems: [],
+  finderItems: [],
+  typoraDocument: null,
   loaded: false,
 };
 
@@ -57,8 +60,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       api.skills(),
       api.music(),
       api.about(),
-      api.desktopItems(),
-    ]).then(([profile, projects, bearNotes, socialLinks, experience, education, skills, music, about, desktopItems]) => {
+      api.finderItems(),
+      api.typoraDocument(),
+    ]).then(([profile, projects, bearNotes, socialLinks, experience, education, skills, music, about, finderItems, typoraDocument]) => {
       setData({
         profile: profile.status === "fulfilled" ? profile.value : null,
         projects: projects.status === "fulfilled" ? projects.value : [],
@@ -69,7 +73,8 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         skills: skills.status === "fulfilled" ? skills.value : [],
         music: music.status === "fulfilled" ? music.value : [],
         about: about.status === "fulfilled" ? about.value : {},
-        desktopItems: desktopItems.status === "fulfilled" ? desktopItems.value : [],
+        finderItems: finderItems.status === "fulfilled" ? finderItems.value : [],
+        typoraDocument: typoraDocument.status === "fulfilled" ? typoraDocument.value : null,
         loaded: true,
       });
     });

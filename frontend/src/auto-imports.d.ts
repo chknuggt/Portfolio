@@ -72,7 +72,4 @@ declare global {
   // @ts-ignore
   export type { BatteryState, UseBatteryState } from './hooks/useBattery'
   import('./hooks/useBattery')
-  // @ts-ignore
-  export type { Terminal } from './components/apps/Terminal'
-  import('./components/apps/Terminal')
 }

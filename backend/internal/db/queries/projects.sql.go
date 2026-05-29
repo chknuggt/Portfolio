@@ -10,7 +10,7 @@ import (
 )
 
 const listProjects = `-- name: ListProjects :many
-SELECT id, title, excerpt, icon, live_url, markdown_file, sort_order, created_at, github_url, technologies FROM projects ORDER BY sort_order ASC
+SELECT id, title, excerpt, icon, live_url, markdown_file, sort_order, created_at, github_url, technologies, content FROM projects ORDER BY sort_order ASC
 `
 
 func (q *Queries) ListProjects(ctx context.Context) ([]Project, error) {
@@ -33,6 +33,7 @@ func (q *Queries) ListProjects(ctx context.Context) ([]Project, error) {
 			&i.CreatedAt,
 			&i.GithubUrl,
 			&i.Technologies,
+			&i.Content,
 		); err != nil {
 			return nil, err
 		}

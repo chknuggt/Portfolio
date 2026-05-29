@@ -16,6 +16,7 @@ type projectResponse struct {
 	GithubUrl    *string `json:"github_url"`
 	Technologies *string `json:"technologies"`
 	MarkdownFile *string `json:"markdown_file"`
+	Content      *string `json:"content"`
 	SortOrder    int32   `json:"sort_order"`
 }
 
@@ -37,6 +38,7 @@ func handleListProjects(q *queries.Queries) http.HandlerFunc {
 				GithubUrl:    p.GithubUrl,
 				Technologies: p.Technologies,
 				MarkdownFile: p.MarkdownFile,
+				Content:      p.Content,
 				SortOrder:    p.SortOrder,
 			}
 		}

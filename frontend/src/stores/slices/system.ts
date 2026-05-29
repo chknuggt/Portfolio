@@ -9,6 +9,7 @@ export interface SystemSlice {
   bluetooth: boolean;
   airdrop: boolean;
   fullscreen: boolean;
+  finderPath: string | null;
   toggleDark: () => void;
   toggleWIFI: () => void;
   toggleBluetooth: () => void;
@@ -16,16 +17,21 @@ export interface SystemSlice {
   toggleFullScreen: (v: boolean) => void;
   setVolume: (v: number) => void;
   setBrightness: (v: number) => void;
+  setFinderPath: (path: string | null) => void;
 }
 
+const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+if (prefersDark) document.documentElement.classList.add("dark");
+
 export const createSystemSlice: StateCreator<SystemSlice> = (set) => ({
-  dark: false,
+  dark: prefersDark,
   volume: 100,
   brightness: 80,
   wifi: true,
   bluetooth: true,
   airdrop: true,
   fullscreen: false,
+  finderPath: null,
   toggleDark: () =>
     set((state) => {
       if (!state.dark) document.documentElement.classList.add("dark");
@@ -41,5 +47,6 @@ export const createSystemSlice: StateCreator<SystemSlice> = (set) => ({
       return { fullscreen: v };
     }),
   setVolume: (v) => set(() => ({ volume: v })),
-  setBrightness: (v) => set(() => ({ brightness: v }))
+  setBrightness: (v) => set(() => ({ brightness: v })),
+  setFinderPath: (path) => set(() => ({ finderPath: path })),
 });

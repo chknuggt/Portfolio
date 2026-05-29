@@ -1,5 +1,12 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import { music } from "../configs";
+import { usePortfolio } from "./PortfolioContext";
+
+export interface TrackInfo {
+  title: string;
+  artist: string;
+  cover: string;
+}
+
 interface AudioContextType {
   audio: HTMLAudioElement;
   audioState: any;
@@ -10,26 +17,31 @@ interface AudioContextType {
     volume: (value: number) => void;
   };
   audioRef: React.RefObject<HTMLAudioElement>;
+  track: TrackInfo | null;
 }
 
-// Create the context with an initial undefined value
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
-// Create a provider component
 export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { music } = usePortfolio();
+  const currentTrack = music[0] ?? null;
+
   const [audio, audioState, controls, audioRef] = useAudio({
-    src: music.audio, 
+    src: currentTrack?.audio ?? "",
     autoReplay: true
   });
 
+  const track: TrackInfo | null = currentTrack
+    ? { title: currentTrack.title, artist: currentTrack.artist, cover: currentTrack.cover }
+    : null;
+
   return (
-    <AudioContext.Provider value={{ audio, audioState, controls, audioRef }}>
+    <AudioContext.Provider value={{ audio, audioState, controls, audioRef, track }}>
       {children}
     </AudioContext.Provider>
   );
 };
 
-// Custom hook to use the audio context
 export const useAudioContext = () => {
   const context = useContext(AudioContext);
   if (!context) {

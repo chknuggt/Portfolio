@@ -20,11 +20,11 @@ type BearNote struct {
 	ID        pgtype.UUID
 	Title     string
 	Excerpt   string
-	File      string
 	SortOrder int32
+	Content   *string
 }
 
-type DesktopItem struct {
+type FinderItem struct {
 	ID        pgtype.UUID
 	Name      string
 	Type      string
@@ -87,6 +87,7 @@ type Project struct {
 	CreatedAt    time.Time
 	GithubUrl    *string
 	Technologies *string
+	Content      *string
 }
 
 type Skill struct {
@@ -103,6 +104,12 @@ type SocialLink struct {
 	Link      string
 	Category  string
 	SortOrder int32
+}
+
+type TyporaDocument struct {
+	ID      pgtype.UUID
+	Title   string
+	Content string
 }
 
 type User struct {
